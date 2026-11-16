@@ -29,8 +29,12 @@ from .util import EXIT_INTEGRITY, MarginaliaError, read_text
 ERROR = "ERROR"
 WARN = "WARN"
 
-_CARD_RE = re.compile(r"^-\s*学员[：:]\s*(?P<name>[^（(]+?)\s*[（(]\s*uid\s*[：:]\s*(?P<uid>[^）)]+?)\s*[）)]")
-_TITLE_RE = re.compile(r"^#\s*《(?P<book>.+?)》\s*[·・]\s*共读批注本\s*[（(]?(?P<name>[^）)]*)[）)]?")
+_CARD_RE = re.compile(
+    r"^-\s*学员[：:]\s*(?P<name>[^（(]+?)\s*[（(]\s*uid\s*[：:]\s*(?P<uid>[^）)]+?)\s*[）)]"
+)
+_TITLE_RE = re.compile(
+    r"^#\s*《(?P<book>.+?)》\s*[·・]\s*共读批注本\s*[（(]?(?P<name>[^）)]*)[）)]?"
+)
 _UID_MARK_RE = re.compile(r"<!--\s*marginalia:uid\s*=\s*(?P<uid>[^\s]+)\s*-->")
 _SPEAKER_RE = re.compile(r"^\s*>\s*👤\s*\*\*(?P<name>[^*]+?)\*\*")
 
@@ -105,7 +109,12 @@ def lint_text(
             uid = card.group("uid").strip()
             if card_name and (name != card_name or uid != card_uid):
                 issue_queue.append(
-                    (lineno, ERROR, "L6", f"出现第二张归属不同的课程卡：{name}（{uid}）≠ {card_name}（{card_uid}）")
+                    (
+                        lineno,
+                        ERROR,
+                        "L6",
+                        f"出现第二张归属不同的课程卡：{name}（{uid}）≠ {card_name}（{card_uid}）",
+                    )
                 )
             else:
                 card_name, card_uid, card_line = name, uid, lineno
@@ -123,12 +132,19 @@ def lint_text(
                 if speaker in known_users and known_users[speaker] != card_uid:
                     hint = f"（「{speaker}」是另一位学员 {known_users[speaker]} 的称呼）"
                 issue_queue.append(
-                    (lineno, ERROR, "L2", f"批注说话人「{speaker}」≠ 本书房学员「{card_name}」{hint}")
+                    (
+                        lineno,
+                        ERROR,
+                        "L2",
+                        f"批注说话人「{speaker}」≠ 本书房学员「{card_name}」{hint}",
+                    )
                 )
 
     # ---- L1 课程卡
     if not card_name:
-        issue_queue.append((1, ERROR, "L1", "课程卡缺少「学员：<称呼>（uid: ...）」——无归属声明，无法判定隔离"))
+        issue_queue.append(
+            (1, ERROR, "L1", "课程卡缺少「学员：<称呼>（uid: ...）」——无归属声明，无法判定隔离")
+        )
 
     # ---- L3 uid 标记
     if marker_uid and card_uid and marker_uid != card_uid:
@@ -139,14 +155,17 @@ def lint_text(
     # ---- L7 注册表可解析性
     if card_uid and known_users and card_uid not in set(known_users.values()):
         issue_queue.append(
-            (card_line, WARN, "L7", f"课程卡 uid「{card_uid}」不在注册表中（可能是外部文件或拼写错误）")
+            (
+                card_line,
+                WARN,
+                "L7",
+                f"课程卡 uid「{card_uid}」不在注册表中（可能是外部文件或拼写错误）",
+            )
         )
 
     # ---- L5 标题称呼
     if title_name and card_name and title_name != card_name:
-        issue_queue.append(
-            (1, WARN, "L5", f"标题称呼「{title_name}」≠ 课程卡称呼「{card_name}」")
-        )
+        issue_queue.append((1, WARN, "L5", f"标题称呼「{title_name}」≠ 课程卡称呼「{card_name}」"))
 
     # ---- 外部期望
     if expected_uid and card_uid and card_uid != expected_uid:
@@ -156,7 +175,9 @@ def lint_text(
 
     report.student = card_name
     report.uid = card_uid
-    report.issues = [Issue(level, line, code, msg) for line, level, code, msg in sorted(issue_queue)]
+    report.issues = [
+        Issue(level, line, code, msg) for line, level, code, msg in sorted(issue_queue)
+    ]
     return report
 
 

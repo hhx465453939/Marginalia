@@ -88,7 +88,9 @@ def speaker_of(store: Store, user: dict) -> str:
     """批注说话人：永远由注册表派生（G4 说话人闸）。"""
     name = (user.get("name") or "").strip()
     if not name:
-        raise MarginaliaError(f"学员 {user.get('uid')} 缺少称呼，无法生成批注说话人", EXIT_INTEGRITY)
+        raise MarginaliaError(
+            f"学员 {user.get('uid')} 缺少称呼，无法生成批注说话人", EXIT_INTEGRITY
+        )
     return name
 
 

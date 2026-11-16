@@ -10,7 +10,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from . import audit, registry
+from . import audit
 from .store import Store, default_slug, validate_slug
 from .util import (
     EXIT_ERROR,
@@ -329,9 +329,7 @@ def set_progress(
 ) -> dict:
     """对外入口：自动按书本加锁。"""
     with store.lock(f"book-{user['uid']}-{slug}"):
-        return _set_progress(
-            store, user, slug, chapter, segment, anchor, next_anchor, next_segment
-        )
+        return _set_progress(store, user, slug, chapter, segment, anchor, next_anchor, next_segment)
 
 
 def _set_progress(
@@ -354,7 +352,8 @@ def _set_progress(
 
     if chapter and not meta.get("chapters"):
         meta["chapters"] = [
-            {"name": h["name"], "level": h["level"], "status": "未讲"} for h in scan_headings(source)
+            {"name": h["name"], "level": h["level"], "status": "未讲"}
+            for h in scan_headings(source)
         ]
 
     names = [c["name"] for c in meta.get("chapters", [])]

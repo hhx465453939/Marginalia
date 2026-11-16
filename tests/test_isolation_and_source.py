@@ -49,9 +49,18 @@ class IsolationTest(BaseTest):
         self.open_book("主人")
         self.open_book("小林")
         code, out = self.cli(
-            "progress", "set", "--as", "主人", "--book", "鬼谷子",
-            "--chapter", "捭阖第一", "--segment", "第一段",
-            "--anchor", "粤若稽古，圣人之在天地间也，为众生之先。",
+            "progress",
+            "set",
+            "--as",
+            "主人",
+            "--book",
+            "鬼谷子",
+            "--chapter",
+            "捭阖第一",
+            "--segment",
+            "第一段",
+            "--anchor",
+            "粤若稽古，圣人之在天地间也，为众生之先。",
         )
         self.assertEqual(code, 0, out)
 
@@ -105,8 +114,18 @@ class AnchorGateTest(BaseTest):
         )
         self.assertEqual(code, 0, out)
         code, out = self.cli(
-            "note", "add", "--as", "主人", "--book", "歧义之书",
-            "--kind", "ask", "--anchor", "各有所归", "--text", "会歧义",
+            "note",
+            "add",
+            "--as",
+            "主人",
+            "--book",
+            "歧义之书",
+            "--kind",
+            "ask",
+            "--anchor",
+            "各有所归",
+            "--text",
+            "会歧义",
         )
         self.assertEqual(code, 3, out)
         self.assertIn("不唯一", out)
@@ -114,21 +133,33 @@ class AnchorGateTest(BaseTest):
     def test_span_anchor(self) -> None:
         self.open_book()
         code, out = self.note(
-            "主人", "ask",
-            "古之大化者，乃与无形俱生。反以观往，覆以验来。", "跨行锚点",
+            "主人",
+            "ask",
+            "古之大化者，乃与无形俱生。反以观往，覆以验来。",
+            "跨行锚点",
         )
         self.assertEqual(code, 0, out)
 
     def test_whitespace_anchor(self) -> None:
         self.open_book()
-        code, out = self.note("主人", "ask", "粤若稽古， 圣人之在天地间也，\n为众生之先。", "空白不同也应命中")
+        code, out = self.note(
+            "主人", "ask", "粤若稽古， 圣人之在天地间也，\n为众生之先。", "空白不同也应命中"
+        )
         self.assertEqual(code, 0, out)
 
     def test_empty_anchor(self) -> None:
         self.open_book()
         code, out = self.cli(
-            "note", "add", "--as", "主人", "--book", "鬼谷子",
-            "--kind", "ask", "--text", "没有锚点",
+            "note",
+            "add",
+            "--as",
+            "主人",
+            "--book",
+            "鬼谷子",
+            "--kind",
+            "ask",
+            "--text",
+            "没有锚点",
         )
         self.assertEqual(code, 3, out)
         self.assertIn("锚点", out)

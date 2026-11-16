@@ -16,7 +16,6 @@ from typing import Any
 from . import audit, books, registry
 from .store import Store
 from .util import (
-    EXIT_IDENTITY,
     EXIT_INTEGRITY,
     MarginaliaError,
     now_bj,
@@ -59,9 +58,7 @@ def add_note(
         registry.require_owner(store, actor, "代笔/代记（--on-behalf）")
         target = registry.resolve(store, on_behalf)
     with store.lock(f"book-{target['uid']}-{slug}"):
-        return _add_note(
-            store, actor, slug, kind, text, anchor, lesson, chapter, on_behalf
-        )
+        return _add_note(store, actor, slug, kind, text, anchor, lesson, chapter, on_behalf)
 
 
 def _add_note(
@@ -90,7 +87,9 @@ def _add_note(
             on_behalf = None
     uid = target["uid"]
 
-    meta = books.load_meta(store, uid, slug)  # 内含 G3 归属闸
+    # G3 归属闸：load_meta 会在 meta.uid ≠ 书房 uid 时抛 exit 3。
+    # 这里故意不接返回值 —— 调用本身就是闸门。
+    books.load_meta(store, uid, slug)
     source = books.read_source(store, uid, slug)  # 内含 G6 原文闸
 
     # ---- G4 说话人闸：speaker 只能来自注册表
@@ -209,9 +208,7 @@ def check_speaker(store: Store, uid: str, note: dict) -> list[str]:
     if note.get("kind") == "explain" and speaker in owner_names:
         return problems
 
-    problems.append(
-        f"{where} 说话人不属于本书房：{speaker!r}（应为 {expected!r}）—— 疑似串档/幻觉"
-    )
+    problems.append(f"{where} 说话人不属于本书房：{speaker!r}（应为 {expected!r}）—— 疑似串档/幻觉")
     return problems
 
 

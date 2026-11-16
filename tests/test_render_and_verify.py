@@ -12,7 +12,12 @@ class RenderTest(BaseTest):
     def setUp(self) -> None:
         super().setUp()
         self.open_book()
-        self.note("主人", "explain", "粤若稽古，圣人之在天地间也，为众生之先。", "这句是全书的门。", )
+        self.note(
+            "主人",
+            "explain",
+            "粤若稽古，圣人之在天地间也，为众生之先。",
+            "这句是全书的门。",
+        )
         self.note("主人", "ask", "变化无穷，各有所归。", "为什么先说变化？")
 
     def text(self) -> str:
@@ -40,7 +45,7 @@ class RenderTest(BaseTest):
             if line.startswith("> 🦞") or line.startswith("> 👤"):
                 self.assertTrue(
                     i > 0 and lines[i - 1].strip() == "",
-                    f"第 {i+1} 行引用块前缺空行：{line[:30]}",
+                    f"第 {i + 1} 行引用块前缺空行：{line[:30]}",
                 )
 
     def test_source_verbatim(self) -> None:
@@ -50,9 +55,18 @@ class RenderTest(BaseTest):
 
     def test_progress_card(self) -> None:
         code, out = self.cli(
-            "progress", "set", "--as", "主人", "--book", "鬼谷子",
-            "--chapter", "捭阖第一", "--segment", "第二段",
-            "--anchor", "变化无穷，各有所归。",
+            "progress",
+            "set",
+            "--as",
+            "主人",
+            "--book",
+            "鬼谷子",
+            "--chapter",
+            "捭阖第一",
+            "--segment",
+            "第二段",
+            "--anchor",
+            "变化无穷，各有所归。",
         )
         self.assertEqual(code, 0, out)
         body = self.text()
@@ -63,8 +77,16 @@ class RenderTest(BaseTest):
 
     def test_chapter_mark(self) -> None:
         code, out = self.cli(
-            "chapter", "mark", "--as", "主人", "--book", "鬼谷子",
-            "--chapter", "反应第二", "--status", "已讲",
+            "chapter",
+            "mark",
+            "--as",
+            "主人",
+            "--book",
+            "鬼谷子",
+            "--chapter",
+            "反应第二",
+            "--status",
+            "已讲",
         )
         self.assertEqual(code, 0, out)
         self.assertIn("| 反应第二 | 已讲 |", self.text())
@@ -84,7 +106,11 @@ class VerifyTest(BaseTest):
     def test_bad_uid(self) -> None:
         """AC8：注入归属错误的批注 → verify exit 3。"""
         path = self.book_dir("主人") / "annotations.jsonl"
-        rows = [json.loads(l) for l in path.read_text(encoding="utf-8").split("\n") if l.strip()]
+        rows = [
+            json.loads(line)
+            for line in path.read_text(encoding="utf-8").split("\n")
+            if line.strip()
+        ]
         bad = dict(rows[0])
         bad["id"] = "n-bad-0001"
         bad["uid"] = "小林"
@@ -97,7 +123,11 @@ class VerifyTest(BaseTest):
 
     def test_wrong_speaker(self) -> None:
         path = self.book_dir("主人") / "annotations.jsonl"
-        rows = [json.loads(l) for l in path.read_text(encoding="utf-8").split("\n") if l.strip()]
+        rows = [
+            json.loads(line)
+            for line in path.read_text(encoding="utf-8").split("\n")
+            if line.strip()
+        ]
         bad = dict(rows[0])
         bad["id"] = "n-bad-0002"
         bad["speaker"] = "别人"
@@ -129,13 +159,19 @@ class AuditTest(BaseTest):
     def test_chain_ok(self) -> None:
         code, out = self.cli("verify")
         self.assertEqual(code, 0, out)
-        rows = [json.loads(l) for l in self.audit().read_text(encoding="utf-8").split("\n") if l.strip()]
+        rows = [
+            json.loads(line)
+            for line in self.audit().read_text(encoding="utf-8").split("\n")
+            if line.strip()
+        ]
         self.assertGreaterEqual(len(rows), 4)
         self.assertEqual(rows[0]["prev_hash"], "0" * 64)
 
     def test_chain_break(self) -> None:
         """AC9：删掉中间一行 → 断链被查出。"""
-        rows = [l for l in self.audit().read_text(encoding="utf-8").split("\n") if l.strip()]
+        rows = [
+            line for line in self.audit().read_text(encoding="utf-8").split("\n") if line.strip()
+        ]
         del rows[1]
         self.audit().write_text("\n".join(rows) + "\n", encoding="utf-8")
         code, out = self.cli("verify")
@@ -143,7 +179,11 @@ class AuditTest(BaseTest):
         self.assertIn("链断裂", out)
 
     def test_chain_tamper(self) -> None:
-        rows = [json.loads(l) for l in self.audit().read_text(encoding="utf-8").split("\n") if l.strip()]
+        rows = [
+            json.loads(line)
+            for line in self.audit().read_text(encoding="utf-8").split("\n")
+            if line.strip()
+        ]
         rows[1]["op"] = "note.delete"
         self.audit().write_text(
             "\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n", encoding="utf-8"

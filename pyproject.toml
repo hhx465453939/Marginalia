@@ -1,5 +1,6 @@
 [build-system]
-requires = ["setuptools>=64"]
+# setuptools>=77 才有 PEP 639 的 SPDX license 表达式支持（避免 2027-02 硬失败）
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -8,22 +9,78 @@ version = "3.0.0"
 description = "多用户共读批注本：给 AI 老师加一层确定性的多用户 IO，用代码钉死「谁的批注本」"
 readme = "README.md"
 requires-python = ">=3.9"
-license = { text = "MIT" }
-authors = [{ name = "Huang Haixiang" }]
-keywords = ["ai-agent", "skill", "reading", "annotation", "multi-user", "education", "margin"]
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Huang Haixiang (Alex Huang)" }]
+keywords = [
+  "ai-agent", "skill", "reading", "annotation", "marginalia",
+  "multi-user", "education", "tutoring", "markdown",
+]
 classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Education",
+  "Natural Language :: Chinese (Simplified)",
+  "Operating System :: OS Independent",
   "Programming Language :: Python :: 3",
-  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: Education",
+  "Topic :: Education :: Teaching",
   "Topic :: Text Processing :: Markup :: Markdown",
+  "Typing :: Typed",
 ]
 dependencies = []
 
+[project.optional-dependencies]
+dev = ["ruff>=0.6"]
+typecheck = ["mypy>=1.10"]
+
 [project.urls]
 Homepage = "https://github.com/hhx465453939/Marginalia"
+Repository = "https://github.com/hhx465453939/Marginalia"
+Issues = "https://github.com/hhx465453939/Marginalia/issues"
+Changelog = "https://github.com/hhx465453939/Marginalia/blob/main/CHANGELOG.md"
 
 [project.scripts]
 marginalia = "marginalia.cli:main"
 
 [tool.setuptools]
 packages = ["marginalia"]
+
+[tool.setuptools.package-data]
+marginalia = ["py.typed"]
+
+# ---------------------------------------------------------------- 代码规范
+
+[tool.ruff]
+line-length = 100
+target-version = "py39"
+extend-exclude = [".git", "build", "dist", "*.egg-info"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B"]
+ignore = [
+  "E501",  # 行宽由编辑器提示；中文按字符计长容易误报
+]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+# ---------------------------------------------------------------- 类型检查
+
+[tool.mypy]
+# 运行时支持 3.9（CI 在 3.9 上跑单元测试证明）；
+# 但 mypy 上游已放弃 3.9 目标，因此类型检查以 3.10 为准。
+python_version = "3.10"
+files = ["marginalia"]
+warn_unused_configs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+no_implicit_optional = true
+check_untyped_defs = true
+ignore_missing_imports = true

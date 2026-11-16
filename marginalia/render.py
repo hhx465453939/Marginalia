@@ -9,10 +9,8 @@
 
 from __future__ import annotations
 
-from typing import Any
-
 from . import books, registry
-from .notes import KINDS, load_notes
+from .notes import load_notes
 from .store import Store
 from .util import now_bj, read_text, sha256_text
 
@@ -108,12 +106,12 @@ def _card(meta: dict, notes: list[dict]) -> str:
         "## 当前进度",
         "",
         f"- 讲到：{(progress.get('chapter') or '—')}·{(progress.get('segment') or '—')}",
-        f"- 锚点：\"{progress.get('anchor') or '—'}\"",
+        f'- 锚点："{progress.get("anchor") or "—"}"',
         "",
         "## 下次接续点",
         "",
         f"- {(nxt.get('chapter') or '—')}·{(nxt.get('segment') or '—')}："
-        f"\"{nxt.get('anchor') or '（待定）'}\"",
+        f'"{nxt.get("anchor") or "（待定）"}"',
         "",
         "---",
         "",
@@ -207,9 +205,7 @@ def render_global_index(store: Store, write: bool = True) -> str:
         except Exception:  # pragma: no cover - 损坏的书房不应阻断总表
             metas = []
         if not metas:
-            rows.append(
-                f"| {user.get('name')} | `{uid}` | — | — | — | — | — | — |"
-            )
+            rows.append(f"| {user.get('name')} | `{uid}` | — | — | — | — | — | — |")
             continue
         for meta in metas:
             slug = meta["slug"]

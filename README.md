@@ -223,6 +223,20 @@ study/
 
 ---
 
+## 文档索引
+
+| 文件 | 内容 |
+|---|---|
+| [PRD.md](PRD.md) | 这个项目解决什么问题、不解决什么问题 |
+| [SPEC](tasks/CHG-001-multiuser-io/SPEC.md) | 工程契约：九道闸、退出码、ADR、DOR/DoD |
+| [TRACEABILITY](tasks/CHG-001-multiuser-io/TRACEABILITY.md) | 需求 → 实现 → 证据 |
+| [HEALTH.md](HEALTH.md) | 健康基线：lint/类型/测试/性能实测 |
+| [CHANGELOG.md](CHANGELOG.md) | 版本变更 |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | 开发与提交规范（三条不可违反的约定） |
+| [SECURITY.md](SECURITY.md) | 漏洞报告与隐私边界 |
+| [MIGRATION.md](MIGRATION.md) | 从旧版单文件批注本迁过来 |
+| [README.en.md](README.en.md) | English |
+
 ## License
 
 MIT —— 见 [LICENSE](LICENSE)。

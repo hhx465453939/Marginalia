@@ -10,21 +10,18 @@ from __future__ import annotations
 
 import argparse
 import json
-import shutil
 import sys
 from pathlib import Path
-from typing import Any
 
-from . import audit, books, importer, lint, notes as notes_mod, registry, render, verify
+from . import audit, books, importer, lint, registry, render, verify
+from . import notes as notes_mod
 from .store import Store, default_slug
 from .util import (
     EXIT_ERROR,
-    EXIT_IDENTITY,
     EXIT_INTEGRITY,
     EXIT_OK,
     MarginaliaError,
     eprint,
-    now_bj,
     shorten,
 )
 
@@ -107,7 +104,9 @@ def cmd_init(args: argparse.Namespace, store: Store) -> int:
             role="owner",
             goal="系统所有者",
         )
-        audit.append(store, user["uid"], user["uid"], "user.add", "registry.json", {"role": "owner"})
+        audit.append(
+            store, user["uid"], user["uid"], "user.add", "registry.json", {"role": "owner"}
+        )
         render.render_user_index(store, user, write=True)
         render.render_global_index(store, write=True)
         _ok(f"已建立 owner 书房: {user['name']}（uid: {user['uid']}）")
@@ -133,7 +132,11 @@ def cmd_user_add(args: argparse.Namespace, store: Store) -> int:
             pace=args.pace or "",
         )
         audit.append(
-            store, user["uid"], user["uid"], "user.add", "registry.json",
+            store,
+            user["uid"],
+            user["uid"],
+            "user.add",
+            "registry.json",
             {"role": user["role"], "name": user["name"]},
         )
     render.render_user_index(store, user, write=True)
@@ -144,7 +147,9 @@ def cmd_user_add(args: argparse.Namespace, store: Store) -> int:
         _ok(f"已建档：{user['name']}（uid: {user['uid']}, role: {user['role']}）")
         _out(f"  书房：{store.rel(store.user_dir(user['uid']))}")
         if user["role"] != "owner":
-            _out(f"  下一步：{PROG} book create --as {user['uid']} --title 《某书》 --source <底本.md>")
+            _out(
+                f"  下一步：{PROG} book create --as {user['uid']} --title 《某书》 --source <底本.md>"
+            )
     return EXIT_OK
 
 
@@ -170,14 +175,16 @@ def cmd_user_list(args: argparse.Namespace, store: Store) -> int:
     for user in users:
         metas = books.list_books(store, user["uid"])
         note_count = sum(len(notes_mod.load_notes(store, user["uid"], m["slug"])) for m in metas)
-        rows.append([
-            user["name"],
-            user["uid"],
-            user.get("role", ""),
-            str(len(metas)),
-            str(note_count),
-            ",".join(user.get("open_ids", []))[:28],
-        ])
+        rows.append(
+            [
+                user["name"],
+                user["uid"],
+                user.get("role", ""),
+                str(len(metas)),
+                str(note_count),
+                ",".join(user.get("open_ids", []))[:28],
+            ]
+        )
     _out(_table(["称呼", "uid", "角色", "课程", "批注", "open_id"], rows))
     return EXIT_OK
 
@@ -198,7 +205,9 @@ def cmd_book_create(args: argparse.Namespace, store: Store) -> int:
     if args.json:
         print(json.dumps(meta, ensure_ascii=False, indent=2))
     else:
-        _ok(f"已开课：《{meta['title']}》 → {store.rel(store.book_paths(user['uid'], slug)['dir'])}")
+        _ok(
+            f"已开课：《{meta['title']}》 → {store.rel(store.book_paths(user['uid'], slug)['dir'])}"
+        )
         _out(f"  学员：{user['name']} ｜ slug：{slug} ｜ 篇目：{len(meta['chapters'])}")
         if not args.source:
             _out("  ⚠ 未提供底本；批注需要底本才能定位，请补 --source")
@@ -220,15 +229,17 @@ def cmd_book_list(args: argparse.Namespace, store: Store) -> int:
         chapters = meta.get("chapters", [])
         done = sum(1 for c in chapters if c.get("status") == "已讲")
         progress = meta.get("progress") or {}
-        rows.append([
-            meta.get("title", meta["slug"]),
-            meta["slug"],
-            meta.get("status", ""),
-            f"{progress.get('chapter') or '—'}·{progress.get('segment') or '—'}",
-            f"{done}/{len(chapters)}",
-            str(len(ns)),
-            meta.get("updated", ""),
-        ])
+        rows.append(
+            [
+                meta.get("title", meta["slug"]),
+                meta["slug"],
+                meta.get("status", ""),
+                f"{progress.get('chapter') or '—'}·{progress.get('segment') or '—'}",
+                f"{done}/{len(chapters)}",
+                str(len(ns)),
+                meta.get("updated", ""),
+            ]
+        )
     _out(_table(["课程", "slug", "状态", "进度", "已讲", "批注", "更新"], rows))
     return EXIT_OK
 
@@ -259,9 +270,9 @@ def cmd_progress_set(args: argparse.Namespace, store: Store) -> int:
     progress = meta["progress"]
     _ok(f"进度已更新：{progress.get('chapter') or '—'}·{progress.get('segment') or '—'}")
     if progress.get("anchor"):
-        _out(f"  锚点：\"{shorten(progress['anchor'], 50)}\"")
+        _out(f'  锚点："{shorten(progress["anchor"], 50)}"')
     if meta["next"].get("anchor"):
-        _out(f"  下次接续：\"{shorten(meta['next']['anchor'], 50)}\"")
+        _out(f'  下次接续："{shorten(meta["next"]["anchor"], 50)}"')
     return EXIT_OK
 
 
@@ -297,10 +308,14 @@ def cmd_note_add(args: argparse.Namespace, store: Store) -> int:
 def cmd_render(args: argparse.Namespace, store: Store) -> int:
     user = registry.resolve(store, args.as_) if args.as_ else None
     if args.indexes_only:
-        counts = render.refresh_all(store) if not user else {
-            "books": 0,
-            "users": 1,
-        }
+        counts = (
+            render.refresh_all(store)
+            if not user
+            else {
+                "books": 0,
+                "users": 1,
+            }
+        )
         if user:
             render.render_user_index(store, user, write=True)
             render.render_global_index(store, write=True)
@@ -358,15 +373,18 @@ def cmd_stats(args: argparse.Namespace, store: Store) -> int:
         return EXIT_OK
     _out(f"# {user['name']} 的学习统计")
     _out(f"批注总数：{data['notes_total']}")
-    kinds = " ｜ ".join(
-        f"{notes_mod.KINDS[k][1]} {v}" for k, v in data["by_kind"].items() if v
-    )
+    kinds = " ｜ ".join(f"{notes_mod.KINDS[k][1]} {v}" for k, v in data["by_kind"].items() if v)
     if kinds:
         _out(f"构成：{kinds}")
     if data["books"]:
         _out("")
         rows = [
-            [b["title"], b["status"], f"{b['chapters_done']}/{b['chapters_total']}", str(b["notes"])]
+            [
+                b["title"],
+                b["status"],
+                f"{b['chapters_done']}/{b['chapters_total']}",
+                str(b["notes"]),
+            ]
             for b in data["books"]
         ]
         _out(_table(["课程", "状态", "已讲篇目", "批注"], rows))
@@ -418,11 +436,15 @@ def cmd_import(args: argparse.Namespace, store: Store) -> int:
     _out(f"  学员：{summary['target']}（uid: {summary['uid']}）")
     _out(f"  原文：{summary['source_chars']} 字符 ｜ sha256 {summary['source_sha256'][:16]}…")
     _out(f"  课程卡：{'已剥离（代码重新生成）' if summary['header_stripped'] else '未检测到'}")
-    _out(f"  篇目：{summary['chapters']} ｜ 批注：{summary['notes_total']}（已定位 {summary['notes_resolved']}）")
+    _out(
+        f"  篇目：{summary['chapters']} ｜ 批注：{summary['notes_total']}（已定位 {summary['notes_resolved']}）"
+    )
     if summary["notes_by_kind"]:
         _out("  构成：" + " ｜ ".join(f"{k}={v}" for k, v in summary["notes_by_kind"].items()))
     if summary["unresolved"]:
-        _out(f"  ⚠ {len(summary['unresolved'])} 条锚点无法唯一定位，将写入 _unresolved.jsonl 待人工处理")
+        _out(
+            f"  ⚠ {len(summary['unresolved'])} 条锚点无法唯一定位，将写入 _unresolved.jsonl 待人工处理"
+        )
     if not summary["applied"]:
         _out("")
         _out("确认无误后加 --apply 真正写盘：")
@@ -489,7 +511,9 @@ def cmd_doctor(args: argparse.Namespace, store: Store) -> int:
     linted = lint.discover_targets(store)
     if linted:
         bad = [r for r in (lint.lint_file(store, p) for p in linted) if not r.ok]
-        _out(f"自检：已审计 {len(linted)} 份批注本，{'✗ ' + str(len(bad)) + ' 份存在串档迹象' if bad else '✓ 未发现串档迹象'}")
+        _out(
+            f"自检：已审计 {len(linted)} 份批注本，{'✗ ' + str(len(bad)) + ' 份存在串档迹象' if bad else '✓ 未发现串档迹象'}"
+        )
     return EXIT_OK
 
 

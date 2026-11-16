@@ -12,7 +12,8 @@ import re
 from dataclasses import dataclass, field
 from typing import Any
 
-from . import books, notes as notes_mod, registry
+from . import books, registry
+from . import notes as notes_mod
 from .store import Store, default_slug
 from .util import MarginaliaError, norm_text, now_bj, sha256_text, shorten, today_bj
 
@@ -117,7 +118,7 @@ def parse_legacy(text: str) -> ParsedBook:
 
 def _find_header_end(lines: list[str]) -> int:
     """识别「代码生成的课程卡」区域，返回其结束行号。"""
-    first = next((l for l in lines if l.strip()), "")
+    first = next((line for line in lines if line.strip()), "")
     if not first.startswith("# 《") or "共读批注本" not in first:
         return 0
     next_idx = None
@@ -238,7 +239,7 @@ def _parse_group(group: list[str]) -> ParsedNote | None:
         speaker_match = _SPEAKER_RE.match(body)
         if speaker_match:
             speaker = speaker_match.group("speaker").strip()
-            body = body[speaker_match.end():].strip()
+            body = body[speaker_match.end() :].strip()
     else:
         body = re.sub(r"^\*\*[^*]+\*\*\s*[：:]?\s*", "", body)
     body = re.sub(r"^(讨论|进度|异文)\s*[：:]\s*", "", body).strip()
@@ -347,7 +348,9 @@ def import_book(
 
     user_dir = store.book_dir(uid, resolved_slug)
     if user_dir.exists():
-        raise MarginaliaError(f"目标课程已存在: {resolved_slug}", hint="换 --slug 或先处理已存在的课程")
+        raise MarginaliaError(
+            f"目标课程已存在: {resolved_slug}", hint="换 --slug 或先处理已存在的课程"
+        )
 
     meta = books.create_book(
         store,
@@ -396,7 +399,11 @@ def import_book(
         if note.anchor_index is None:
             continue
         if note.kind == "explain":
-            speaker = note.speaker if note.speaker in owner_names else (next(iter(owner_names)) if owner_names else expected_speaker)
+            speaker = (
+                note.speaker
+                if note.speaker in owner_names
+                else (next(iter(owner_names)) if owner_names else expected_speaker)
+            )
         else:
             speaker = expected_speaker
         record = {

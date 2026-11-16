@@ -21,8 +21,18 @@ class IdentityGateTest(BaseTest):
         self.open_book()
         before = self.tree_snapshot()
         code, out = self.cli(
-            "note", "add", "--as", "陌生人", "--book", "鬼谷子",
-            "--kind", "ask", "--anchor", "变化无穷，各有所归。", "--text", "偷偷写一条",
+            "note",
+            "add",
+            "--as",
+            "陌生人",
+            "--book",
+            "鬼谷子",
+            "--kind",
+            "ask",
+            "--anchor",
+            "变化无穷，各有所归。",
+            "--text",
+            "偷偷写一条",
         )
         self.assertEqual(code, 2, out)
         self.assertEqual(before, self.tree_snapshot(), "被拒绝的命令不得写盘")
@@ -52,23 +62,49 @@ class PathGateTest(BaseTest):
         self.open_book()
         for slug in ("../../etc", "a/b", "..", "/abs/path", "C:\\windows"):
             code, out = self.cli(
-                "note", "add", "--as", "主人", "--book", slug,
-                "--kind", "ask", "--anchor", "变化无穷，各有所归。", "--text", "x",
+                "note",
+                "add",
+                "--as",
+                "主人",
+                "--book",
+                slug,
+                "--kind",
+                "ask",
+                "--anchor",
+                "变化无穷，各有所归。",
+                "--text",
+                "x",
             )
             self.assertEqual(code, 2, f"{slug} 应被拒绝，实际输出：{out}")
 
     def test_bad_slug_create(self) -> None:
         code, out = self.cli(
-            "book", "create", "--as", "主人", "--title", "坏书",
-            "--source", str(self.source_file), "--slug", "../../evil",
+            "book",
+            "create",
+            "--as",
+            "主人",
+            "--title",
+            "坏书",
+            "--source",
+            str(self.source_file),
+            "--slug",
+            "../../evil",
         )
         self.assertEqual(code, 2, out)
         self.assertFalse((self.tmp / "evil").exists())
 
     def test_dot_slug(self) -> None:
         code, _ = self.cli(
-            "book", "create", "--as", "主人", "--title", "隐藏书",
-            "--source", str(self.source_file), "--slug", ".hidden",
+            "book",
+            "create",
+            "--as",
+            "主人",
+            "--title",
+            "隐藏书",
+            "--source",
+            str(self.source_file),
+            "--slug",
+            ".hidden",
         )
         self.assertEqual(code, 2)
 

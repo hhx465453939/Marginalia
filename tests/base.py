@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import io
 import json
-import os
 import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
@@ -124,15 +123,29 @@ class BaseTest(unittest.TestCase):
 
     def note(self, who: str, kind: str, anchor: str, text: str = "笔记", book: str = "鬼谷子"):
         return self.cli(
-            "note", "add", "--as", who, "--book", book, "--kind", kind,
-            "--anchor", anchor, "--text", text,
+            "note",
+            "add",
+            "--as",
+            who,
+            "--book",
+            book,
+            "--kind",
+            kind,
+            "--anchor",
+            anchor,
+            "--text",
+            text,
         )
 
     def annotations(self, who: str, book: str = "鬼谷子") -> list[dict]:
         path = self.book_dir(who, book) / "annotations.jsonl"
         if not path.is_file():
             return []
-        return [json.loads(line) for line in path.read_text(encoding="utf-8").split("\n") if line.strip()]
+        return [
+            json.loads(line)
+            for line in path.read_text(encoding="utf-8").split("\n")
+            if line.strip()
+        ]
 
     def tree_snapshot(self) -> list[str]:
         if not self.root.exists():

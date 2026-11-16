@@ -40,9 +40,7 @@ def validate_slug(slug: str, kind: str = "book") -> str:
     if len(slug) > 64:
         raise MarginaliaError(f"{kind} 标识过长（≤64）: {slug!r}", EXIT_IDENTITY)
     if any(ch in slug for ch in ("/", "\\", "\x00")):
-        raise MarginaliaError(
-            f"{kind} 标识禁止包含路径分隔符: {slug!r}", EXIT_IDENTITY
-        )
+        raise MarginaliaError(f"{kind} 标识禁止包含路径分隔符: {slug!r}", EXIT_IDENTITY)
     if slug.startswith(".") or ".." in slug:
         raise MarginaliaError(f"{kind} 标识禁止以点开头或包含 '..': {slug!r}", EXIT_IDENTITY)
     if slug.lower() in _RESERVED:
@@ -184,9 +182,7 @@ class Store:
             try:
                 out.append(json.loads(line))
             except json.JSONDecodeError as exc:
-                raise MarginaliaError(
-                    f"JSONL 损坏 {self.rel(path)}:{lineno} — {exc}"
-                ) from exc
+                raise MarginaliaError(f"JSONL 损坏 {self.rel(path)}:{lineno} — {exc}") from exc
         return out
 
     def append_jsonl(self, path: Path, obj: dict) -> None:
@@ -236,9 +232,9 @@ class Store:
                     continue
                 if time.monotonic() > deadline:
                     raise MarginaliaError(
-                        f"获取写锁超时（{.0 + timeout:.0f}s）: {lock_path.name}",
+                        f"获取写锁超时（{timeout:.0f}s）: {lock_path.name}",
                         hint="是否有另一个 marginalia 进程卡住？确认后可删除该锁文件",
-                    )
+                    ) from None
                 time.sleep(0.05)
         held.add(key)
         try:

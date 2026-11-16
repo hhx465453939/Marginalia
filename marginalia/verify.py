@@ -7,10 +7,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import Any
 
-from . import audit, books, registry, render
+from . import audit, registry, render
 from .notes import check_note, check_speaker, load_notes
 from .store import Store, validate_slug, validate_uid
 from .util import EXIT_INTEGRITY, MarginaliaError, read_text, sha256_text
@@ -168,9 +167,7 @@ def _verify_book(
         else:
             expected = meta.get("source_sha256")
             if expected and sha256_text(source) != expected:
-                report.error(
-                    f"{where}: 原文被改动（sha256 不匹配）—— 违反了「原文一字不改」铁律"
-                )
+                report.error(f"{where}: 原文被改动（sha256 不匹配）—— 违反了「原文一字不改」铁律")
             elif not expected:
                 report.warn(f"{where}: meta.source_sha256 缺失，原文未受哈希保护")
             report.bump("sources")
@@ -250,6 +247,7 @@ def assert_ok(report: Report) -> None:
     """strict 场景下直接抛错，交给 CLI 转成 exit 3。"""
     if not report.ok:
         raise MarginaliaError(
-            f"完整性校验失败：{len(report.errors)} 项错误\n  - " + "\n  - ".join(report.errors[:20]),
+            f"完整性校验失败：{len(report.errors)} 项错误\n  - "
+            + "\n  - ".join(report.errors[:20]),
             EXIT_INTEGRITY,
         )

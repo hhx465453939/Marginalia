@@ -38,9 +38,7 @@ class ImportTest(BaseTest):
             if line.strip()
         ]
         self.assertEqual(len(notes), 4, [n["kind"] for n in notes])
-        self.assertEqual(
-            sorted(n["kind"] for n in notes), ["ask", "dialog", "explain", "progress"]
-        )
+        self.assertEqual(sorted(n["kind"] for n in notes), ["ask", "dialog", "explain", "progress"])
 
         meta = json.loads((book / "meta.json").read_text(encoding="utf-8"))
         self.assertEqual(meta["title"], "鬼谷子")
@@ -66,14 +64,18 @@ class ImportTest(BaseTest):
     def test_speaker_guard(self) -> None:
         """原文件里混着别人的批注 → 默认拒绝导入。"""
         path = self.tmp / "mixed.md"
-        path.write_text(LEGACY.replace("👤 **主人**：为什么要先稽古？", "👤 **小林**：我要问"), encoding="utf-8")
+        path.write_text(
+            LEGACY.replace("👤 **主人**：为什么要先稽古？", "👤 **小林**：我要问"), encoding="utf-8"
+        )
         code, out = self.cli("import", "--as", "主人", "--from", str(path), "--apply")
         self.assertEqual(code, 1, out)
         self.assertIn("说话人", out)
 
     def test_force_speaker(self) -> None:
         path = self.tmp / "mixed.md"
-        path.write_text(LEGACY.replace("👤 **主人**：为什么要先稽古？", "👤 **小林**：我要问"), encoding="utf-8")
+        path.write_text(
+            LEGACY.replace("👤 **主人**：为什么要先稽古？", "👤 **小林**：我要问"), encoding="utf-8"
+        )
         code, out = self.cli(
             "import", "--as", "主人", "--from", str(path), "--apply", "--force-speaker"
         )
@@ -98,7 +100,8 @@ class ConcurrencyTest(BaseTest):
     def test_parallel_notes(self) -> None:
         """AC11：20 线程直调库函数（不靠调用方加锁）→ 全部落盘、id 唯一、审计链完整。"""
         self.open_book()
-        from marginalia import notes as notes_mod, registry
+        from marginalia import notes as notes_mod
+        from marginalia import registry
         from marginalia.store import Store
 
         store = Store(self.root)
