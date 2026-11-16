@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# Marginalia 启动器（Linux / macOS / Git Bash）
+# 不依赖 pip install：直接把仓库根塞进 PYTHONPATH。
+set -euo pipefail
+
+here="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+export PYTHONUTF8=1
+export PYTHONPATH="$here${PYTHONPATH:+:$PYTHONPATH}"
+
+if command -v python3 >/dev/null 2>&1; then
+  exec python3 -X utf8 -m marginalia "$@"
+elif command -v python >/dev/null 2>&1; then
+  exec python -X utf8 -m marginalia "$@"
+else
+  echo "需要 Python 3.9+；未找到 python3 或 python" >&2
+  exit 1
+fi

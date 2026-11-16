@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "marginalia"
+version = "3.0.0"
+description = "多用户共读批注本：给 AI 老师加一层确定性的多用户 IO，用代码钉死「谁的批注本」"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Huang Haixiang" }]
+keywords = ["ai-agent", "skill", "reading", "annotation", "multi-user", "education", "margin"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Topic :: Education",
+  "Topic :: Text Processing :: Markup :: Markdown",
+]
+dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/hhx465453939/Marginalia"
+
+[project.scripts]
+marginalia = "marginalia.cli:main"
+
+[tool.setuptools]
+packages = ["marginalia"]

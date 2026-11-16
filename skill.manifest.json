@@ -1,0 +1,86 @@
+{
+  "schema_version": "2.0",
+  "id": "marginalia",
+  "legacy_ids": ["tutor-progress"],
+  "display_name": "Marginalia",
+  "summary": "多用户共读批注本：原文一字不改，师生对话长在书页边上，每位学员一间独立书房。所有写入经确定性 IO 层（身份/路径/说话人由代码派生），把「把 A 的进度写到 B 书房」这类幻觉变成 exit 2/3 的硬拒绝。",
+  "trigger_summary": "任意用户说上课/开讲/接着讲/继续学/讲到哪了/我想学XX/把批注本发我等教学话术，或提到具体学习科目时激活；按 sender_id 解析学员并路由到其书房。",
+  "scope": "workspace_custom",
+  "entrypoint": {
+    "kind": "skill",
+    "path": "SKILL.md",
+    "runtime": "dual",
+    "modes": {
+      "strict": {
+        "requires": ["python>=3.9"],
+        "isolation": "hard",
+        "entry": "marginalia CLI",
+        "verify": "marginalia verify --check-render --strict"
+      },
+      "portable": {
+        "requires": [],
+        "isolation": "protocol-only",
+        "entry": "SKILL.md 书房指针协议",
+        "verify": "marginalia lint（有 shell 时）或人工清单"
+      }
+    }
+  },
+  "io_contract": {
+    "doc": "references/io-contract.md",
+    "format_spec": "references/lesson-record-format.md",
+    "identity_source": "study/registry.json",
+    "writable_via": "marginalia CLI only",
+    "forbidden": [
+      "自行拼接 study/users/... 路径写入",
+      "手改 source.md / meta.json / annotations.jsonl / book.md",
+      "以他人身份写入",
+      "替学员编造其发言"
+    ],
+    "exit_codes": { "0": "ok", "1": "error", "2": "identity/path", "3": "integrity" }
+  },
+  "data_layout": {
+    "root": "study/",
+    "identity": "study/registry.json",
+    "per_user": "study/users/<uid>/",
+    "per_book": "study/users/<uid>/books/<slug>/",
+    "truth": ["meta.json", "annotations.jsonl", "source.md"],
+    "rendered": "book.md",
+    "audit": "audit.jsonl (hash-chained)"
+  },
+  "delegates_to": [],
+  "state_source": "study/users/<uid>/books/<slug>/meta.json",
+  "completion_artifacts": [
+    "users/<uid>/books/<slug>/book.md（结课批注本）"
+  ],
+  "quality_gates": [
+    "G1 identity", "G2 path", "G3 ownership", "G4 speaker", "G5 anchor-unique",
+    "G6 source-hash", "G7 audit-chain", "G8 concurrency", "G9 render-fresh"
+  ],
+  "information_profile": {
+    "enabled": true,
+    "diet": "herbivore",
+    "domains": ["文本细读", "古籍", "通识教育"],
+    "primary_lanes": ["shidianguji-fetcher", "pdf-reader", "本地藏书"],
+    "escalation_lanes": ["网络检索（版本校勘时）"],
+    "local_corpora": ["books/"],
+    "notes": "底本必须可哈希；不接受模型凭记忆生成的「原文」。"
+  },
+  "framework_profile": {
+    "enabled": false,
+    "frameworks": [],
+    "prefer_local_sources": true,
+    "allow_historical_analogues": false,
+    "notes": "教学法由 profile 调制，本技能不绑定固定框架。"
+  },
+  "work_product_profile": {
+    "enabled": true,
+    "deliverable_kind": "annotated_book",
+    "required_sections": ["课程卡", "全书地图", "当前进度", "下次接续点", "原文", "批注层"],
+    "required_artifacts": ["book.md"],
+    "handoff_rules": [
+      "结课或随时导出，只发给学员本人",
+      "owner 代导出需 --on-behalf 并留审计"
+    ],
+    "notes": "交付物是给人读的单文件 Markdown，不依赖本项目即可阅读。"
+  }
+}
