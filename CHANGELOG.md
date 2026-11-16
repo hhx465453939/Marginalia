@@ -5,7 +5,34 @@
 
 ## [Unreleased]
 
-（暂无）
+### Added
+
+- `marginalia setup`：一条命令完成部署——预检 → 建数据根 → 建 owner → 装 skill 副本 → 写 `deployment.json` → 自证；支持 `--dry-run` / `--check` / `--no-skill` / `--force`，幂等
+- 部署状态机 `absent / partial / stale / broken / ready`，`--check` 用退出码表达（0 / 1 / 3）
+- **漂移检测**：安装副本与仓库 `SKILL.md` 的 sha256 不一致即 `stale`，避免“代码升级了、skill 还是旧的”
+- **G10 部署闸**：目标技能目录属于其它技能时拒绝覆盖，除非 `--force`
+- `AGENT_DEPLOY.md`：agent 面部署协议，每步含命令 / 期望输出 / 失败分支；含 B 模式（无执行通道）手工路径
+- `references/deployment.md`：实现细节（状态机、G10、幂等性、已知边界）
+- `scripts/deploy.sh` / `scripts/deploy.cmd`：只负责找 Python + 设 UTF-8 + 转调 CLI 的薄包装
+- `doctor` 新增「部署状态」段：版本 / skill 路径 / 失败检查项 / 修复命令
+- README（中/英）开头新增「部署」区块：可直接转给 agent 的一句自然语言指令 + 四条命令 + 退出码含义
+- `SKILL.md` §0 新增部署门：命令不存在时不再卡住，指向 `AGENT_DEPLOY.md`
+
+### Changed
+
+- 版本号收敛到单一真源 `marginalia.__version__`；`marginalia --version` 不再硬编码，
+  并由测试断言与 `pyproject.toml` 一致
+
+### Fixed
+
+- 修正部署预检顺序：`--skills-dir` / 参数成对校验提到**任何写盘之前**（此前会先建数据根再报错）
+- 取消“自动使用探测到的 skills 目录”：写入用户技能目录必须显式 `--skills-dir`，避免擅自修改用户环境
+- 部署检查项去重（`root_initialized` 等此前会重复输出）
+- 启动脚本 `bin/marginalia` / `scripts/deploy.sh` 按「PATH 里有」选解释器，在 Windows 上会选中
+  Microsoft Store 占位符（`python3` 存在但不可执行）→ 改为**实际执行一次并校验 ≥ 3.9**，并在回退链里补上 `py -3`
+- `--root` 作为全局选项此前只能写在子命令**之前**，而 README / `AGENT_DEPLOY.md` / `deploy.sh`
+  用的是更自然的 `marginalia setup --root ...`——文档里的主推命令会报 `unrecognized arguments`。
+  现改为两种位置都接受（只提取独立令牌，不误伤 `--text` 正文）
 
 ## [3.0.0] - 2026-11-16
 

@@ -1,17 +1,39 @@
 #!/usr/bin/env bash
 # Marginalia 启动器（Linux / macOS / Git Bash）
 # 不依赖 pip install：直接把仓库根塞进 PYTHONPATH。
-set -euo pipefail
+set -eo pipefail
 
 here="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 export PYTHONUTF8=1
 export PYTHONPATH="$here${PYTHONPATH:+:$PYTHONPATH}"
 
-if command -v python3 >/dev/null 2>&1; then
-  exec python3 -X utf8 -m marginalia "$@"
-elif command -v python >/dev/null 2>&1; then
-  exec python -X utf8 -m marginalia "$@"
-else
-  echo "需要 Python 3.9+；未找到 python3 或 python" >&2
+# 按「真的能跑」探测，而不是按「PATH 里有」探测。
+# Windows 上 python3 经常是 Microsoft Store 的占位符：command -v 会成功，
+# 执行却报 “Python was not found ... install from the Microsoft Store”。
+# 所以必须实际执行一次，并顺带校验版本 >= 3.9。
+probe_python() {
+  local exe="$1"
+  shift
+  command -v "$exe" >/dev/null 2>&1 || return 1
+  "$exe" "$@" -c 'import sys; raise SystemExit(0 if sys.version_info[:2] >= (3, 9) else 1)' \
+    >/dev/null 2>&1
+}
+
+PYRUN=""
+if probe_python python3; then
+  PYRUN="python3"
+elif probe_python python; then
+  PYRUN="python"
+elif probe_python py -3; then
+  PYRUN="py -3"
+fi
+
+if [ -z "$PYRUN" ]; then
+  echo "✗ 找不到可用的 Python（需要 3.9+）。" >&2
+  echo "  → 安装后重试。Windows 上若 python3 是应用商店占位符，请安装正式版或改用 py -3" >&2
   exit 1
 fi
+
+# $PYRUN 只有三种受控取值，允许按词切分
+# shellcheck disable=SC2086
+exec $PYRUN -X utf8 -m marginalia "$@"

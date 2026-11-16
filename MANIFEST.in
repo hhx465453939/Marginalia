@@ -6,12 +6,16 @@ include CONTRIBUTING.md
 include SECURITY.md
 include MIGRATION.md
 include PRD.md
+include HEALTH.md
+include AGENT_DEPLOY.md
 include SKILL.md
 include skill.manifest.json
 
 recursive-include references *.md
 recursive-include assets *.svg
 recursive-include tasks *.md
+recursive-include scripts *.sh *.cmd
+recursive-include bin *
 recursive-include marginalia py.typed
 
 prune tests

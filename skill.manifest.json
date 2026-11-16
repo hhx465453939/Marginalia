@@ -54,8 +54,28 @@
   ],
   "quality_gates": [
     "G1 identity", "G2 path", "G3 ownership", "G4 speaker", "G5 anchor-unique",
-    "G6 source-hash", "G7 audit-chain", "G8 concurrency", "G9 render-fresh"
+    "G6 source-hash", "G7 audit-chain", "G8 concurrency", "G9 render-fresh",
+    "G10 deployment (不覆盖其它技能的目录)"
   ],
+  "deployment": {
+    "protocol": "AGENT_DEPLOY.md",
+    "detail": "references/deployment.md",
+    "entry_scripts": ["scripts/deploy.sh", "scripts/deploy.cmd"],
+    "command": "marginalia setup --root <数据根> --skills-dir <技能根> --owner-open-id <sender_id> --owner-name <称呼>",
+    "self_check": "marginalia setup --check",
+    "state_file": "<root>/deployment.json",
+    "states": {
+      "ready": 0,
+      "absent": 1,
+      "partial": 1,
+      "stale": 3,
+      "broken": 3
+    },
+    "requires_explicit_skills_dir": true,
+    "idempotent": true,
+    "writes_student_data": false,
+    "notes": "skills 目录必须由部署者显式指定；候选目录仅作为建议出现在报错里，不自动写入。"
+  },
   "information_profile": {
     "enabled": true,
     "diet": "herbivore",

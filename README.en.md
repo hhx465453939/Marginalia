@@ -8,12 +8,51 @@
 <p align="center">
   <code>Marginalia</code> · multi-user shared-reading notebooks · a deterministic IO layer for AI tutoring
   <br>
-  <sub>46 tests · Python 3.9+ · zero dependencies · MIT</sub>
+  <sub>74 tests · Python 3.9+ · zero dependencies · MIT</sub>
 </p>
 
 <p align="center">
   <a href="README.md">中文</a> · English
 </p>
+
+---
+
+## Deploy (for agents: this section is enough)
+
+**Paste this to your agent and it will read the protocol and deploy itself:**
+
+> Follow `AGENT_DEPLOY.md` in this repository: install the CLI, run `marginalia setup`,
+> self-check with `marginalia setup --check`, then show me the output of `marginalia doctor`.
+> If you cannot find the skills directory, ask me — do not guess a path.
+
+**Or run it yourself (four commands):**
+
+```bash
+# 1) install the CLI (pick one)
+python -m pip install -e .        # or ./bin/marginalia (Windows: bin\marginalia.cmd)
+
+# 2) one command: data root + owner + skill copy + deployment record
+marginalia setup --root ./study --skills-dir ~/.claude/skills \
+  --owner-open-id <your sender_id> --owner-name Owner
+
+# 3) self-check: the exit code is the verdict
+marginalia setup --check
+
+# 4) confirm mode and capability boundary
+marginalia doctor
+```
+
+| `--check` exit code | State | Meaning | What to do |
+|---|---|---|---|
+| `0` | `ready` | deployed and verified | start teaching |
+| `1` | `absent` / `partial` | not deployed / record missing | go back to step 2 |
+| `3` | `stale` | skill copy is out of date | `marginalia setup --force` |
+| `3` | `broken` | data integrity problem | `marginalia verify`, do not write |
+
+Deployment never touches student data; `setup` is idempotent. Add `--dry-run` to see the plan without writing.
+
+- Full protocol (with failure branches per step): [AGENT_DEPLOY.md](AGENT_DEPLOY.md)
+- Implementation notes (maintainers): [references/deployment.md](references/deployment.md)
 
 ---
 

@@ -13,7 +13,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import audit, books, importer, lint, registry, render, verify
+from . import __version__, audit, books, importer, lint, registry, render, setup, verify
 from . import notes as notes_mod
 from .store import Store, default_slug
 from .util import (
@@ -26,6 +26,39 @@ from .util import (
 )
 
 PROG = "marginalia"
+
+
+def _hoist_global_flags(argv: list[str]) -> list[str]:
+    """把全局开关（`--json` / `--root`）提到子命令之前。
+
+    为什么需要：argparse 只接受「子命令之前」的全局选项，但人和 agent 写出来的
+    自然写法是 `marginalia setup --root ./study ...`。文档里就是这么写的，
+    若只支持一种位置，文档里的主推命令会直接报 unrecognized arguments。
+
+    安全性：只提取**独立的** `--json` / `--root <值>` / `--root=<值>` 令牌，
+    不会误伤 `--text "正文里提到 --root"`（那是一个完整的 token）。
+    """
+    hoisted: list[str] = []
+    rest: list[str] = []
+    index = 0
+    while index < len(argv):
+        token = argv[index]
+        if token == "--json":
+            hoisted.append(token)
+            index += 1
+        elif token == "--root":
+            hoisted.append(token)
+            if index + 1 < len(argv):
+                hoisted.append(argv[index + 1])
+                index += 1
+            index += 1
+        elif token.startswith("--root="):
+            hoisted.append(token)
+            index += 1
+        else:
+            rest.append(token)
+            index += 1
+    return hoisted + rest
 
 
 # ---------------------------------------------------------------- 输出helper
@@ -483,6 +516,49 @@ def cmd_lint(args: argparse.Namespace, store: Store) -> int:
     return EXIT_OK if not lint.has_errors(reports) else EXIT_INTEGRITY
 
 
+def cmd_setup(args: argparse.Namespace, store: Store) -> int:
+    """部署：建数据根 + 建 owner + 装 skill 副本 + 记账 + 自证。"""
+    if args.check:
+        state, checks, record = setup.check_setup(store)
+        result = setup.SetupResult(
+            state=state,
+            root=str(store.root),
+            python=setup.python_version(),
+            checks=checks,
+            skill=(record or {}).get("skill"),
+        )
+        if args.json:
+            print(
+                json.dumps(
+                    {
+                        "state": state,
+                        "root": result.root,
+                        "checks": [c.to_dict() for c in checks],
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            )
+        else:
+            _out(setup.summarize(result, setup.next_steps(result)))
+        return setup.EXIT_BY_STATE.get(state, EXIT_ERROR)
+
+    result = setup.run_setup(
+        store,
+        skills_dir=args.skills_dir,
+        owner_open_id=args.owner_open_id,
+        owner_name=args.owner_name,
+        dry_run=args.dry_run,
+        with_skill=not args.no_skill,
+        force=args.force,
+    )
+    if args.json:
+        print(json.dumps(result.to_dict(), ensure_ascii=False, indent=2))
+    else:
+        _out(setup.summarize(result, setup.next_steps(result)))
+    return result.exit_code
+
+
 def cmd_doctor(args: argparse.Namespace, store: Store) -> int:
     _out(f"# {PROG} doctor")
     _out(f"Python：{sys.version.split()[0]}")
@@ -504,6 +580,23 @@ def cmd_doctor(args: argparse.Namespace, store: Store) -> int:
         _out(f"✗ {len(report.errors)} 项完整性问题，运行 `{PROG} verify` 查看")
         return EXIT_INTEGRITY
     _ok("数据健康")
+    _out("")
+    _out("# 部署状态（CHG-002）")
+    if setup.read_deployment(store) is None:
+        _out("✗ 未记录部署：没有 deployment.json")
+        _out(f"  修复：{PROG} setup --skills-dir <技能根>")
+    else:
+        state, checks, record = setup.check_setup(store)
+        version = (record or {}).get("project_version", "?")
+        skill = (record or {}).get("skill") or {}
+        _out(f"状态：{state} ｜ 版本：{version}")
+        if skill:
+            _out(f"skill：{skill.get('dir')}")
+        failed = [c for c in checks if not c.ok]
+        if failed:
+            for check in failed:
+                _out(f"  ✗ {check.name} — {check.detail}")
+            _out("  修复：marginalia setup --force")
     _out("")
     _out("# 隔离能力边界（AC18）")
     _out("模式 A · strict：本进程可执行 → 路径/说话人由代码派生，越权即拒（写入前拦截）")
@@ -528,7 +621,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--root", help="数据根目录（默认 ./study 或 $MARGINALIA_HOME）")
     parser.add_argument("--json", action="store_true", help="机器可读输出")
-    parser.add_argument("--version", action="version", version=f"{PROG} 3.0.0")
+    parser.add_argument("--version", action="version", version=f"{PROG} {__version__}")
 
     sub = parser.add_subparsers(dest="command", required=True)
 
@@ -537,6 +630,16 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--owner-name", help="owner 称呼")
     p.add_argument("--force", action="store_true", help="覆盖已有 registry.json")
     p.set_defaults(func=cmd_init)
+
+    p = sub.add_parser("setup", help="部署：建数据根 + 装 skill + 记账 + 自证")
+    p.add_argument("--skills-dir", help="技能根目录（会装到 <dir>/marginalia/）")
+    p.add_argument("--owner-open-id", help="同时建立 owner（真实 sender_id）")
+    p.add_argument("--owner-name", help="owner 称呼")
+    p.add_argument("--dry-run", action="store_true", help="只打印计划，零写入")
+    p.add_argument("--check", action="store_true", help="只校验；退出码即结论")
+    p.add_argument("--force", action="store_true", help="允许覆盖同名技能目录 / 刷新旧副本")
+    p.add_argument("--no-skill", action="store_true", help="只建数据根，不装 skill")
+    p.set_defaults(func=cmd_setup)
 
     user = sub.add_parser("user", help="学员注册表")
     user_sub = user.add_subparsers(dest="user_command", required=True)
@@ -656,11 +759,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: list[str] | None = None) -> int:
     _force_utf8()
-    raw = list(sys.argv[1:] if argv is None else argv)
-    # 容错：--json 是全局开关，但用户/模型经常写在子命令后面
-    if "--json" in raw:
-        raw = [t for t in raw if t != "--json"]
-        raw.insert(0, "--json")
+    raw = _hoist_global_flags(list(sys.argv[1:] if argv is None else argv))
     parser = build_parser()
     args = parser.parse_args(raw)
     store = Store(args.root)

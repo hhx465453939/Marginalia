@@ -7,8 +7,47 @@
 <p align="center">
   <code>Marginalia</code> · 多用户共读批注本 · 给陪伴式学习加一层确定性的 IO
   <br>
-  <sub>46 tests · Python 3.9+ · 零依赖 · MIT</sub>
+  <sub>74 tests · Python 3.9+ · 零依赖 · MIT</sub>
 </p>
+
+---
+
+## 部署（给 agent：读这一段就够）
+
+**把下面这句话丢给你的 agent，它会自己读协议并部署：**
+
+> 请按仓库里的 `AGENT_DEPLOY.md` 部署这个项目：装 CLI、跑 `marginalia setup`、
+> 用 `marginalia setup --check` 自证，最后把 `marginalia doctor` 的输出给我看。
+> 找不到技能目录就问我，不要自己猜地址。
+
+**或者你自己跑（四条命令）：**
+
+```bash
+# 1) 装 CLI（三选一）
+python -m pip install -e .        # 或 ./bin/marginalia（Windows: bin\marginalia.cmd）
+
+# 2) 一条命令部署：建数据根 + 建 owner + 装 skill 副本 + 记账
+marginalia setup --root ./study --skills-dir ~/.claude/skills \
+  --owner-open-id <你的 sender_id> --owner-name 主人
+
+# 3) 自证：退出码就是结论
+marginalia setup --check
+
+# 4) 确认模式与能力边界
+marginalia doctor
+```
+
+| `--check` 退出码 | 状态 | 含义 | 处置 |
+|---|---|---|---|
+| `0` | `ready` | 装好了 | 直接说「我想学《某书》」 |
+| `1` | `absent` / `partial` | 还没装 / 缺记录 | 回第 2 步 |
+| `3` | `stale` | skill 副本过期（仓库改了） | `marginalia setup --force` |
+| `3` | `broken` | 数据完整性有问题 | `marginalia verify` 看详情，先别写 |
+
+部署不写任何学员数据；`setup` 幂等，可反复跑。不想它现在就动盘就加 `--dry-run`。
+
+- 完整协议（每步含失败分支）：[AGENT_DEPLOY.md](AGENT_DEPLOY.md)
+- 实现细节（维护者向）：[references/deployment.md](references/deployment.md)
 
 ---
 

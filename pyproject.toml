@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "marginalia"
-version = "3.0.0"
+version = "3.1.0"
 description = "多用户共读批注本：给 AI 老师加一层确定性的多用户 IO，用代码钉死「谁的批注本」"
 readme = "README.md"
 requires-python = ">=3.9"

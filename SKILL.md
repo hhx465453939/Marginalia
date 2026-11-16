@@ -9,7 +9,24 @@ description: 多用户共读批注本管家。当任意用户说"上课/开讲/�
 
 ---
 
-## 0. 第一步永远是判定模式（不可跳过）
+## 0. 第一步：确认已部署（不可跳过）
+
+```bash
+marginalia setup --check
+```
+
+| 退出码 | 状态 | 你接下来怎么做 |
+|---|---|---|
+| `0` | `ready` | 继续 §0.1 |
+| `1` | `absent` / `partial` | 还没装好 → 读 `AGENT_DEPLOY.md`，按 §1–§2 部署 |
+| `3` | `stale` | skill 副本过期（仓库改过 `SKILL.md`）→ `marginalia setup --force` |
+| `3` | `broken` | 数据完整性有问题 → `marginalia verify` 看详情，**停止写入** |
+
+**如果 `marginalia` 命令根本不存在**：说明你没有执行通道。不要硬猜、不要手工拼路径假装能跑——
+直接走 §2（模式 B），并在回复里明确告诉用户：“这是弱隔离，靠规则约束而非代码强制。”
+完整的部署与排障步骤见 `AGENT_DEPLOY.md`（§6 是模式 B 的手工路径）。
+
+## 0.1 判定与交接（不可跳过）
 
 ```
 运行：marginalia doctor
