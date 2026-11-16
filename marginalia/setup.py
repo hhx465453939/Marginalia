@@ -35,6 +35,7 @@ from .util import (
     EXIT_ERROR,
     EXIT_INTEGRITY,
     MarginaliaError,
+    atomic_write,
     now_bj,
     read_text,
     sha256_text,
@@ -261,7 +262,6 @@ def install_skill(
         if dry_run:
             result.created.append(str(dest))
             continue
-        dest.parent.mkdir(parents=True, exist_ok=True)
         # 内容相同就不重写，避免无意义地改动 mtime
         try:
             same = dest.is_file() and read_text(dest) == read_text(src)
@@ -270,7 +270,10 @@ def install_skill(
         if same:
             result.skipped.append(str(dest))
             continue
-        dest.write_text(read_text(src), encoding="utf-8", newline="\n")
+        # 用 atomic_write，而不是 Path.write_text(newline=...)：
+        # 后者是 Python 3.10+ 才有的参数，在 3.9 上会 TypeError。
+        # atomic_write 内部用 os.fdopen(..., newline="\n")，3.9 可用。
+        atomic_write(dest, read_text(src))
         result.created.append(str(dest))
 
     if not dry_run:

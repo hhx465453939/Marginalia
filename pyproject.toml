@@ -36,7 +36,10 @@ classifiers = [
 dependencies = []
 
 [project.optional-dependencies]
-dev = ["ruff>=0.6"]
+# 版本钉死：ruff 的 formatter 默认值会跨版本变动，
+# 若用 >= 而 CI 拿到新版，`ruff format --check` 会无缘无故变红。
+# 升级 ruff 时必须同步跑一遍 `ruff format .` 并提交。
+dev = ["ruff==0.13.0"]
 typecheck = ["mypy>=1.10"]
 
 [project.urls]

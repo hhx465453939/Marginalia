@@ -8,7 +8,7 @@
 <p align="center">
   <code>Marginalia</code> · multi-user shared-reading notebooks · a deterministic IO layer for AI tutoring
   <br>
-  <sub>74 tests · Python 3.9+ · zero dependencies · MIT</sub>
+  <sub>77 tests · Python 3.9+ · zero dependencies · MIT</sub>
 </p>
 
 <p align="center">

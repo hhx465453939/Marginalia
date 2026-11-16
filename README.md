@@ -7,7 +7,7 @@
 <p align="center">
   <code>Marginalia</code> · 多用户共读批注本 · 给陪伴式学习加一层确定性的 IO
   <br>
-  <sub>74 tests · Python 3.9+ · 零依赖 · MIT</sub>
+  <sub>77 tests · Python 3.9+ · 零依赖 · MIT</sub>
 </p>
 
 ---

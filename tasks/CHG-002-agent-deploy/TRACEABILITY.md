@@ -56,6 +56,11 @@
 | 5 | 文档一致性测试把 YAML frontmatter 当正文 | `name: marginalia` + 换行 `description:` 被匹配成命令 | 扫描前剥离 frontmatter（而非给测试加白名单） |
 | 6 | `bin/marginalia` / `scripts/deploy.sh` 在本机直接失败 | 按「PATH 里有」选解释器：Windows 上 `python3` 是应用商店占位符，`command -v` 成功但执行报错 | 改为**实际执行一次并校验 ≥ 3.9**，回退链补 `py -3`；`deploy.cmd` 同步改成 `where` + 执行探测 |
 | 7 | 文档主推命令 `marginalia setup --root ...` 直接报 `unrecognized arguments` | argparse 只接受子命令**之前**的全局选项，而文档写的是子命令之后 | CLI 新增 `_hoist_global_flags()`：两种位置都接受；只提取独立令牌，不误伤 `--text` 正文 |
+| 8 | CI 的 py3.9 两个作业崩：`TypeError: write_text() got an unexpected keyword argument 'newline'` | `Path.write_text(newline=)` 是 **Python 3.10+** 才有的参数；本地开发在 3.13，测不出来 | 改用仓库已有的 `atomic_write`（内部 `os.fdopen(newline="\n")`，3.9 可用）；新增 `tests/test_compat.py` 用 AST 静态拦 3.10+ 专属参数 |
+| 9 | 同一个 commit 本地 `ruff format --check` 绿、CI 红 | `ruff>=0.6` 未钉版本：本地 0.13.0、CI 拿到新版，formatter 默认值跳版本变了 | dev 依赖与 CI 均钉死 `ruff==0.13.0`；升版必须同步跑 `ruff format .` 并提交 |
+
+> 第 8、9 条的共同点：**本地环境比 CI 新/不同**，本地全绿说明不了 CI 不会红。
+> 对策是把「环境差异」变成可执行的断言（静态兼容守卫 + 工具版本钉死），而不是靠记性。
 
 > 第 1、2 条是我自己在这一轮引入的——冒烟测试时真的往本机 `~/.claude/skills/marginalia` 装了副本，
 > 已当场确认（manifest id 一致）后删除，并改成「必须显式指定」。
@@ -70,3 +75,4 @@
 | B 模式无法被 `--check` 检测 | 无执行通道就没有检测器 | 架构性限制，已在 `AGENT_DEPLOY.md` §6 明写，不视为缺陷 |
 | 真实 OpenClaw 上跑一次完整部署 | 部署不在本机 | 用户在目标机跑 `marginalia setup --check` 并回传输出 |
 | 多台机器批量分发 | 不在本 CHG 范围（SPEC §1.3 非目标） | 需要时单独立 CHG |
+| **一次不可复现的测试失败** | 开发中曾出现一次 `FAILED (failures=1)`，随后连跑 3 轮全量 + 并发用例 10 轮 + 部署用例 10 轮，**共 23 次全绿，无法复现** | 若 CI 重现，将它固定成一条回归用例；在此之前不凭猜测改测试或代码 |

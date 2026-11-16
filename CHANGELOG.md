@@ -22,6 +22,8 @@
 
 - 版本号收敛到单一真源 `marginalia.__version__`；`marginalia --version` 不再硬编码，
   并由测试断言与 `pyproject.toml` 一致
+- `ruff` 从 `>=0.6` 改为钉死 `==0.13.0`（dev 依赖与 CI 同步）：
+  formatter 默认值会跳版本变动，未钉时本地绿、CI 红
 
 ### Fixed
 
@@ -33,6 +35,11 @@
 - `--root` 作为全局选项此前只能写在子命令**之前**，而 README / `AGENT_DEPLOY.md` / `deploy.sh`
   用的是更自然的 `marginalia setup --root ...`——文档里的主推命令会报 `unrecognized arguments`。
   现改为两种位置都接受（只提取独立令牌，不误伤 `--text` 正文）
+- **Python 3.9 崩溃**：`install_skill` 用了 `Path.write_text(..., newline="\n")`，而 `newline` 参数是
+  3.10 才加的（CI 实证 `TypeError: write_text() got an unexpected keyword argument 'newline'`）
+  → 改用仓库已有的 `atomic_write`（内部 `os.fdopen(newline="\n")`，3.9 可用）
+- 新增 `tests/test_compat.py` 静态守卫：用 AST 扫源码，拦住 3.10+ 专属参数，
+  避免「本地 3.13 绿、CI 3.9 红」的反馈环过长
 
 ## [3.0.0] - 2026-11-16
 
