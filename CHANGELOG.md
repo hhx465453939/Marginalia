@@ -40,6 +40,7 @@
 - 构建期 3 处 PEP 621/639 元数据废弃警告（2027-02 将硬失败）→ 迁移到 SPDX 表达式后归零
 - `Store.lock` 超时消息里的 `{.0 + timeout:.0f}` 怪表达式 → `{timeout:.0f}`，并按 B904 显式 `from None`
 - Windows GBK 控制台导致中文/符号输出崩溃 → 入口强制 UTF-8，`bin/marginalia.cmd` 设 `PYTHONUTF8=1`
+- CI：`ubuntu-latest` 已滚到 26.04，其中无 Python 3.9 构建（实测 `The version '3.9' ... was not found for Ubuntu 26.04`）→ 矩阵改为按版本钉 runner（3.9 → `ubuntu-22.04`，3.11/3.13 → `ubuntu-24.04`），并把 `checkout` / `setup-python` 升到真实存在的 v7（避开 Node 20 弃用）
 - 引用块紧贴原文被 CommonMark 当作段落续行（批注不渲染）→ 渲染时强制空行分隔
 - 篇目识别误把 `# 书名` 当作篇目 → 文档标题存在时篇目级别下探一层
 - 迁移器把 `**讨论**` / `**进度**` 标签误当说话人、把 `**【第1课】**` 误当人名 → 仅 `👤` 承载"人"
